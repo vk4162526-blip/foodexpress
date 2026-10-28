@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4511e">
+  <title>FoodExpress — Online Food Delivery</title>
+  <style>
+    :root { --brand:#f4511e; --brand-dark:#d84315; --ink:#222; --muted:#666; --bg:#fff8f2; --card:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+    header { background:linear-gradient(120deg,#f4511e,#ff8a50); color:#fff; padding:22px 16px 28px; }
+    .header-inner, main, footer { width:min(1100px,100% - 28px); margin:auto; }
+    .topline { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    h1 { margin:0; font-size:clamp(25px,5vw,38px); }
+    .tagline { margin:6px 0 18px; }
+    .search { width:100%; max-width:600px; padding:13px 15px; border:0; border-radius:12px; font-size:16px; outline:2px solid transparent; }
+    .search:focus { outline-color:#ffd2bf; }
+    .cart-pill { background:#fff; color:var(--brand-dark); border-radius:999px; padding:9px 13px; font-weight:700; white-space:nowrap; }
+    main { padding:22px 0 36px; }
+    .section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; flex-wrap:wrap; }
+    h2 { margin:8px 0 16px; }
+    .muted { color:var(--muted); }
+    .menu { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px; }
+    .food { background:var(--card); border-radius:16px; padding:16px; box-shadow:0 5px 18px #54200b0c; border:1px solid #f4e6dd; }
+    .food-emoji { height:105px; display:grid; place-items:center; font-size:66px; background:#fff1e8; border-radius:12px; }
+    .food h3 { margin:12px 0 5px; }
+    .food-desc { color:var(--muted); font-size:14px; min-height:36px; margin:0 0 12px; }
+    .food-bottom { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .price { color:var(--brand-dark); font-size:19px; font-weight:800; }
+    button { border:0; border-radius:9px; padding:10px 13px; background:var(--brand); color:white; font-weight:700; font-size:14px; cursor:pointer; }
+    button:hover { background:var(--brand-dark); }
+    button:focus-visible, input:focus-visible, textarea:focus-visible { outline:3px solid #ffb89c; outline-offset:2px; }
+    button.secondary { background:#fff0e8; color:var(--brand-dark); }
+    button.secondary:hover { background:#ffe0d2; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .layout { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(280px,.8fr); gap:20px; margin-top:28px; align-items:start; }
+    .panel { background:#fff; border:1px solid #f0e2d9; border-radius:16px; padding:18px; box-shadow:0 5px 18px #54200b0c; }
+    .panel h2 { margin-top:0; }
+    .cart-row { display:grid; grid-template-columns:1fr auto; gap:10px; padding:12px 0; border-bottom:1px solid #f1e8e2; }
+    .cart-name { font-weight:700; }
+    .qty { display:flex; align-items:center; gap:7px; margin-top:7px; }
+    .qty button { padding:4px 10px; min-width:30px; }
+    .row-price { font-weight:700; text-align:right; }
+    .totals { margin-top:14px; }
+    .total-line { display:flex; justify-content:space-between; gap:12px; margin:8px 0; }
+    .grand-total { font-size:20px; font-weight:800; border-top:1px solid #eee; padding-top:12px; }
+    form { display:grid; gap:11px; }
+    label { font-size:14px; font-weight:700; display:grid; gap:5px; }
+    input, textarea { width:100%; padding:11px 12px; border:1px solid #d9d0ca; border-radius:9px; font:inherit; background:#fff; }
+    textarea { min-height:75px; resize:vertical; }
+    .full { width:100%; padding:12px; }
+    .notice { font-size:13px; color:var(--muted); line-height:1.5; }
+    .status { margin-top:12px; padding:12px; border-radius:10px; background:#eef9ee; color:#1e6523; display:none; overflow-wrap:anywhere; }
+    .status.error { display:block; background:#fff0ed; color:#a52a12; }
+    .status.success { display:block; }
+    .empty { color:var(--muted); padding:8px 0; }
+    footer { padding:18px 0 28px; color:var(--muted); text-align:center; font-size:13px; }
+    @media(max-width:720px) { .layout { grid-template-columns:1fr; } .cart-pill { margin-top:8px; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="topline">
+      <h1>🍔 FoodExpress</h1>
+      <div class="cart-pill">🛒 कार्ट: <span id="cartCount">0</span></div>
+    </div>
+    <p class="tagline">स्वादिष्ट खाना, अब आपके पास!</p>
+    <input id="search" class="search" type="search" placeholder="खाना खोजें — पिज़्ज़ा, बर्गर, बिरयानी..." aria-label="खाना खोजें">
+  </div>
+</header>
+
+<main>
+  <div class="section-title">
+    <div>
+      <h2>🍽️ हमारा मेन्यू</h2>
+      <div class="muted">अपना पसंदीदा खाना चुनें।</div>
+    </div>
+  </div>
+  <div id="menu" class="menu" aria-live="polite"></div>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>🛒 आपकी कार्ट</h2>
+      <div id="cartItems"></div>
+      <div class="totals">
+        <div class="total-line"><span>खाने की कीमत</span><span id="subtotal">₹0</span></div>
+        <div class="total-line"><span>डिलीवरी शुल्क</span><span id="delivery">₹0</span></div>
+        <div class="total-line grand-total"><span>कुल कीमत</span><span id="total">₹0</span></div>
+      </div>
+      <button id="clearCart" class="secondary">कार्ट खाली करें</button>
+    </section>
+
+    <section class="panel">
+      <h2>📦 ऑर्डर की जानकारी</h2>
+      <form id="checkoutForm">
+        <label>पूरा नाम
+          <input name="customerName" required minlength="2" autocomplete="name" placeholder="अपना नाम लिखें">
+        </label>
+        <label>मोबाइल नंबर
+          <input name="phone" required inputmode="tel" pattern="[0-9+\-\s]{10,15}" autocomplete="tel" placeholder="10 अंकों का मोबाइल नंबर">
+        </label>
+        <label>डिलीवरी का पता
+          <textarea name="address" required minlength="8" autocomplete="street-address" placeholder="मकान नंबर, गली, शहर, पिन कोड"></textarea>
+        </label>
+        <label>खास निर्देश (वैकल्पिक)
+          <input name="notes" maxlength="200" placeholder="जैसे कम मसाले">
+        </label>
+        <button class="full" type="submit">ऑर्डर तैयार करें</button>
+      </form>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+      <p class="notice">डेमो सूचना: यह एक अकेली HTML फाइल है। ऑर्डर इस ब्राउज़र में दिखेगा/सेव होगा, लेकिन रेस्तराँ तक नहीं भेजा जाएगा। असली डिलीवरी, दूसरे डिवाइस पर ऑर्डर देखना और ऑनलाइन पेमेंट शुरू करने के लिए सुरक्षित सर्वर, डेटाबेस और पेमेंट गेटवे जोड़ना होगा।</p>
+    </section>
+  </div>
+</main>
+
+<footer>© 2026 FoodExpress · डेमो फूड ऑर्डरिंग वेबसाइट</footer>
+
+<script>
+(() => {
+  const foods = [
+    {id:1, name:"पिज़्ज़ा", emoji:"🍕", price:199, desc:"चीज़ और स्वादिष्ट टॉपिंग वाला पिज़्ज़ा"},
+    {id:2, name:"बर्गर", emoji:"🍔", price:99, desc:"कुरकुरा पैटी और ताज़ी सब्ज़ियाँ"},
+    {id:3, name:"वेज बिरयानी", emoji:"🍛", price:149, desc:"मसालों और खुशबू से भरपूर"},
+    {id:4, name:"मोमोज", emoji:"🥟", price:79, desc:"गरमागरम मोमोज, चटनी के साथ"},
+    {id:5, name:"सैंडविच", emoji:"🥪", price:89, desc:"ताज़ी सब्ज़ियों वाला सैंडविच"},
+    {id:6, name:"आइसक्रीम", emoji:"🍨", price:59, desc:"मीठी और ठंडी मिठाई"},
+    {id:7, name:"फ्रेंच फ्राइज़", emoji:"🍟", price:69, desc:"कुरकुरे गोल्डन फ्राइज़"},
+    {id:8, name:"डोसा", emoji:"🥞", price:119, desc:"क्रिस्पी डोसा, सांभर के साथ"}
+  ];
+  const cart = {};
+  const money = n => "₹" + n.toLocaleString("en-IN");
+  const menu = document.getElementById("menu");
+  const cartItems = document.getElementById("cartItems");
+  const status = document.getElementById("status");
+
+  function showFoods() {
+    const q = document.getElementById("search").value.trim().toLocaleLowerCase("hi");
+    const list = foods.filter(f => f.name.toLocaleLowerCase("hi").includes(q));
+    menu.innerHTML = list.length ? list.map(f => `
+      <article class="food">
+        <div class="food-emoji" aria-hidden="true">${f.emoji}</div>
+        <h3>${f.name}</h3>
+        <p class="food-desc">${f.desc}</p>
+        <div class="food-bottom">
+          <span class="price">${money(f.price)}</span>
+          <button type="button" data-add="${f.id}">कार्ट में जोड़ें</button>
+        </div>
+      </article>`).join("") : '<p class="empty">इस नाम का खाना नहीं मिला।</p>';
+  }
+
+  function totals() {
+    const count = Object.values(cart).reduce((a,b) => a+b, 0);
+    const subtotal = foods.reduce((sum,f) => sum + f.price*(cart[f.id]||0), 0);
+    const delivery = subtotal === 0 ? 0 : (subtotal >= 299 ? 0 : 30);
+    document.getElementById("cartCount").textContent = count;
+    document.getElementById("subtotal").textContent = money(subtotal);
+    document.getElementById("delivery").textContent = delivery === 0 && subtotal > 0 ? "मुफ़्त" : money(delivery);
+    document.getElementById("total").textContent = money(subtotal + delivery);
+    return {count, subtotal, delivery, total:subtotal+delivery};
+  }
+
+  function renderCart() {
+    const entries = foods.filter(f => cart[f.id]);
+    cartItems.innerHTML = entries.length ? entries.map(f => `
+      <div class="cart-row">
+        <div>
+          <div class="cart-name">${f.emoji} ${f.name}</div>
+          <div class="qty">
+            <button type="button" class="secondary" data-change="${f.id}" data-delta="-1" aria-label="${f.name} की मात्रा घटाएँ">−</button>
+            <span>${cart[f.id]}</span>
+            <button type="button" data-change="${f.id}" data-delta="1" aria-label="${f.name} की मात्रा बढ़ाएँ">+</button>
+          </div>
+        </div>
+        <div class="row-price">${money(f.price*cart[f.id])}</div>
+      </div>`).join("") : '<p class="empty">आपकी कार्ट खाली है। मेन्यू से खाना जोड़ें।</p>';
+    totals();
+  }
+
+  menu.addEventListener("click", e => {
+    const btn = e.target.closest("[data-add]");
+    if (!btn) return;
+    const id = Number(btn.dataset.add);
+    cart[id] = (cart[id] || 0) + 1;
+    status.className = "status";
+    status.textContent = "";
+    renderCart();
+  });
+
+  cartItems.addEventListener("click", e => {
+    const btn = e.target.closest("[data-change]");
+    if (!btn) return;
+    const id = Number(btn.dataset.change);
+    cart[id] = (cart[id] || 0) + Number(btn.dataset.delta);
+    if (cart[id] <= 0) delete cart[id];
+    status.className = "status";
+    status.textContent = "";
+    renderCart();
+  });
+
+  document.getElementById("search").addEventListener("input", showFoods);
+  document.getElementById("clearCart").addEventListener("click", () => {
+    Object.keys(cart).forEach(k => delete cart[k]);
+    status.className = "status";
+    status.textContent = "";
+    renderCart();
+  });
+
+  document.getElementById("checkoutForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const {count, subtotal, delivery, total} = totals();
+    if (!count) {
+      status.className = "status error";
+      status.textContent = "ऑर्डर करने से पहले कार्ट में कम-से-कम एक आइटम जोड़ें।";
+      return;
+    }
+    const data = new FormData(e.currentTarget);
+    const order = {
+      orderNumber: "FE" + Date.now().toString().slice(-8),
+      createdAt: new Date().toLocaleString("hi-IN"),
+      customerName: String(data.get("customerName")).trim(),
+      phone: String(data.get("phone")).trim(),
+      address: String(data.get("address")).trim(),
+      notes: String(data.get("notes") || "").trim(),
+      items: foods.filter(f => cart[f.id]).map(f => ({name:f.name, quantity:cart[f.id], unitPrice:f.price, amount:f.price*cart[f.id]})),
+      subtotal, delivery, total,
+      state: "डेमो ऑर्डर — सर्वर पर नहीं भेजा गया"
+    };
+    try {
+      const oldOrders = JSON.parse(localStorage.getItem("foodexpress_demo_orders") || "[]");
+      oldOrders.push(order);
+      localStorage.setItem("foodexpress_demo_orders", JSON.stringify(oldOrders));
+      status.className = "status success";
+      status.textContent = `डेमो ऑर्डर ${order.orderNumber} तैयार है। कुल ${money(total)}। यह ऑर्डर सिर्फ इसी ब्राउज़र में सेव हुआ है; रेस्तराँ को नहीं भेजा गया।`;
+      e.currentTarget.reset();
+    } catch (err) {
+      status.className = "status error";
+      status.textContent = "इस ब्राउज़र में ऑर्डर सेव नहीं हो पाया। कृपया ब्राउज़र की स्टोरेज सेटिंग जाँचें।";
+    }
+  });
+
+  showFoods();
+  renderCart();
+})();
+</script>
+</body>
+</html>
